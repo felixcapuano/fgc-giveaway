@@ -1,10 +1,11 @@
 name: update giveway
+
 on: 
   push:
     branches:
       - master
 jobs:
-  buid:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository contents
@@ -12,6 +13,8 @@ jobs:
       
       - name: Setup
         uses: actions/setup-node@v3.5.1
+        with:
+          node-version: '19.1.0'
       
       - name: Install
         run: |
