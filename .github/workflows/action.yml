@@ -1,6 +1,6 @@
 name: update giveway
 
-on: 
+on:
   push:
     branches:
       - master
@@ -10,21 +10,19 @@ jobs:
     steps:
       - name: checkout repository contents
         uses: actions/checkout@v2
-      
+
       - name: Setup
         uses: actions/setup-node@v3.5.1
         with:
           node-version: '19.1.0'
-      
+
       - name: Install
         run: |
           npm install
-      
+
       - name: Run
-        env: 
+        env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          PARALLEL_TASK: 10
+          PARALLEL_TASK: 5
         run: |
           npm start
-        
-        
