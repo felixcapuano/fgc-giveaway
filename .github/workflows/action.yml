@@ -1,0 +1,27 @@
+name: update giveway
+on: 
+  push:
+    branches:
+      - master
+jobs:
+  buid:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository contents
+        uses: actions/checkout@v2
+      
+      - name: Setup
+        uses: actions/setup-node@v3.5.1
+      
+      - name: Install
+        run: |
+          npm install
+      
+      - name: Run
+        env: 
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          PARALLEL_TASK: 10
+        run: |
+          npm start
+        
+        
