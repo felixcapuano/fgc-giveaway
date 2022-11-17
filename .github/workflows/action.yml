@@ -23,6 +23,6 @@ jobs:
       - name: Run
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          PARALLEL_TASK: 5
+          PARALLEL_TASK: 10
         run: |
           npm start

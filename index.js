@@ -3,7 +3,7 @@ const async = require('async');
 const fs = require('fs');
 const axios = require('axios');
 
-PARALLEL_TASK = process.env.PARALLEL_TASK || 2;
+PARALLEL_TASK = process.env.PARALLEL_TASK || 20;
 DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 
 if (!DISCORD_WEBHOOK) throw 'Missing DISCORD_WEBHOOK environment variable.';
@@ -18,6 +18,7 @@ const randomInt = (min, max) => {
 
 const sendDiscordMessage = async (payload) => {
   try {
+    await sleep(2000);
     await axios.post(DISCORD_WEBHOOK, payload);
   } catch (e) {
     console.error(e);
@@ -158,7 +159,7 @@ fs.readFile('./links.txt', 'utf8', async (err, data) => {
 
   const browser = await puppeteer.launch({ headless: true });
 
-  const jobs = links.map((link) => async (callback) => {
+  const jobs = links.map((link) => async () => {
     const data = await extractFromURL(link, browser);
     return data;
   });
