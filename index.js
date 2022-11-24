@@ -18,7 +18,7 @@ const randomInt = (min, max) => {
 
 const sendDiscordMessage = async (payload) => {
   try {
-    await sleep(2000);
+    await sleep(1000);
     await axios.post(DISCORD_WEBHOOK, payload);
   } catch (e) {
     console.error(e);
@@ -109,21 +109,21 @@ const innerHTMLbyClass = async (className, page) => {
   return page.$eval(className, (element) => element.innerHTML);
 };
 
-let counter = 0;
-const extractFromURL = async (url, browser) => {
+const extractFromURL = async (url, browser, id = 0) => {
   const page = await browser.newPage();
 
   try {
+    console.debug(id, 'go to page :', url);
     await page.goto(url, { waitUntil: 'networkidle2' });
   } catch (e) {
-    console.error(e);
+    console.error(id, JSON.stringify(e.message));
     await page.close();
-    await sleep(randomInt(5, 10) * 1000);
-    return await extractFromURL(url, browser);
+    await sleep(randomInt(1, 5) * 1000);
+    console.debug(id, 'failed go to page :', e.message);
+    return await extractFromURL(url, browser, id);
   }
 
-  counter++;
-  console.log(counter, 'extracting', url);
+  console.log(id, 'extracting', url);
 
   const data = { url };
   if (await page.$('.giveaway-result')) {
@@ -146,22 +146,28 @@ const extractFromURL = async (url, browser) => {
   } else {
     data.success = false;
   }
+  console.debug(id, 'extracted data from page :', JSON.stringify(data));
+
+  console.log(id, 'closing page');
   await page.close();
 
   return data;
 };
 
 fs.readFile('./links.txt', 'utf8', async (err, data) => {
-  console.time('execution');
+  console.time(id, 'execution');
 
   if (err) return;
   const links = data.split(/\r?\n/).map((line) => line.trim());
 
   const browser = await puppeteer.launch({ headless: true });
 
-  const jobs = links.map((link) => async () => {
-    const data = await extractFromURL(link, browser);
-    return data;
+  let id = 0;
+  const jobs = links.map((link) => {
+    return async () => {
+      id++;
+      return await extractFromURL(link, browser, id);
+    };
   });
 
   const results = await async.parallelLimit(jobs, PARALLEL_TASK);
