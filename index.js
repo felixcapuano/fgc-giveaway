@@ -155,7 +155,7 @@ const extractFromURL = async (url, browser, id = 0) => {
 };
 
 fs.readFile('./links.txt', 'utf8', async (err, data) => {
-  console.time(id, 'execution');
+  console.time('execution');
 
   if (err) return;
   const links = data.split(/\r?\n/).map((line) => line.trim());
