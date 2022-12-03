@@ -1,7 +1,17 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
 const async = require('async');
 const fs = require('fs');
 const axios = require('axios');
+const moment = require('moment');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const { executablePath } = require('puppeteer');
+
+puppeteer.use(StealthPlugin());
+
+const generate_random_proxy = () => {
+  const proxies = [{ protocole: 'http', host: '51.15.242.202', port: '8888' }];
+  return proxies[Math.floor(Math.random() * proxies.length)];
+};
 
 PARALLEL_TASK = process.env.PARALLEL_TASK || 20;
 DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
@@ -36,7 +46,7 @@ const sendDiscordNotification = async (data) => {
     .filter(({ done, success }) => done !== true && success)
     .map((d) => ({
       name: d.url + '?igr=fgc18',
-      value: `🎁 Il ne te reste plus que ${d.days} jour(s) et ${d.hours} heure(s) pour participer.`,
+      value: `🎁 Terminé : <t:${d.givewayDate.unix()}:R>`,
     }));
 
   const commons = {
@@ -133,14 +143,20 @@ const extractFromURL = async (url, browser, id = 0) => {
   } else if (await page.$('.ig-contest-countdown ')) {
     data.days = await innerHTMLbyClass('.ig-contest-countdown-days', page);
     data.hours = await innerHTMLbyClass('.ig-contest-countdown-hours', page);
-    // data.minutes = await innerHTMLbyClass(
-    //   '.ig-contest-countdown-minutes',
-    //   page
-    // );
-    // data.seconds = await innerHTMLbyClass(
-    //   '.ig-contest-countdown-seconds',
-    //   page
-    // );
+    data.minutes = await innerHTMLbyClass(
+      '.ig-contest-countdown-minutes',
+      page
+    );
+    data.seconds = await innerHTMLbyClass(
+      '.ig-contest-countdown-seconds',
+      page
+    );
+    data.givewayDate = moment()
+      .add(data.days, 'days')
+      .add(data.hours, 'hours')
+      .add(data.minutes, 'minutes')
+      .add(data.seconds, 'seconds');
+
     data.done = false;
     data.success = true;
   } else {
@@ -160,7 +176,10 @@ fs.readFile('./links.txt', 'utf8', async (err, data) => {
   if (err) return;
   const links = data.split(/\r?\n/).map((line) => line.trim());
 
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: executablePath(),
+  });
 
   let id = 0;
   const jobs = links.map((link) => {
